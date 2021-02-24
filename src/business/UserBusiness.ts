@@ -38,16 +38,23 @@ export class UserBusiness{
 
        const hashPassword = await this.hashManager.hash(user.password);
 
-       const newUser: User = new User(
-           id,
-           user.name,
-           user.email,
-           user.nickname,
-           hashPassword,
-           user.profilePicture
-       )
+    //    const newUser: User = new User(
+    //        id,
+    //        user.name,
+    //        user.email,
+    //        user.nickname,
+    //        hashPassword,
+    //        user.profilePicture
+    //    )
 
-       await this.userDatabase.createUser(newUser)
+       await this.userDatabase.createUser(
+         id,
+         user.name,
+         user.email,
+         user.nickname,
+         hashPassword,
+         user.profilePicture
+       );
 
        const accessToken = this.authenticator.generateToken({
            id
