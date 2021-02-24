@@ -18,6 +18,11 @@ export interface UserInputDTO{
     profilePicture: string
 }
 
+export interface LoginInputDTO{
+  email: string,
+  password: string
+}
+
 export interface AuthenticationData {
   id: string;
 }

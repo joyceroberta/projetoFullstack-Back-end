@@ -1,5 +1,5 @@
 import { UserDatabase } from "../data/UserDatabase";
-import { User, UserInputDTO } from "./entities/User";
+import { LoginInputDTO, User, UserInputDTO } from "./entities/User";
 import { CustomError } from "./error/CustomError";
 import { Authenticator } from "./services/Authenticator";
 import { HashManager } from "./services/HashManager";
@@ -38,23 +38,16 @@ export class UserBusiness{
 
        const hashPassword = await this.hashManager.hash(user.password);
 
-    //    const newUser: User = new User(
-    //        id,
-    //        user.name,
-    //        user.email,
-    //        user.nickname,
-    //        hashPassword,
-    //        user.profilePicture
-    //    )
+       const newUser: User = new User(
+           id,
+           user.name,
+           user.email,
+           user.nickname,
+           hashPassword,
+           user.profilePicture
+       )
 
-       await this.userDatabase.createUser(
-         id,
-         user.name,
-         user.email,
-         user.nickname,
-         hashPassword,
-         user.profilePicture
-       );
+       await this.userDatabase.createUser(newUser);
 
        const accessToken = this.authenticator.generateToken({
            id
@@ -64,6 +57,42 @@ export class UserBusiness{
 
    } catch (error) {
        throw new CustomError(error.statusCode, error.message);
+       }
+   }
+
+   async getUserByEmail(user: LoginInputDTO){
+       try {
+           if(!user.email || !user.password)
+           throw new CustomError(
+             406,
+             "Por favor preencha com seu email ou nickname e senha."
+           );
+
+           const userFromDB = await this.userDatabase.selectUserByEmail(user.email);
+
+           if(!userFromDB){
+               throw new CustomError(401, "Credenciais inválidas.");
+           }
+
+           const userPassword: string = userFromDB.password
+
+           const passwordIsCorrect = await this.hashManager.compare(
+               user.password,
+               userPassword
+           );
+
+           const id: string = userFromDB.id
+
+           const accessToken = this.authenticator.generateToken({id});
+
+             if (!passwordIsCorrect) {
+               throw new CustomError(401, "Credenciais inválidas.");
+             }
+
+           return accessToken
+
+       } catch (error) {
+           throw new CustomError(error.statusCode, error.message);  
        }
    }
 }
