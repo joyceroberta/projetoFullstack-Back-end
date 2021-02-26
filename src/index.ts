@@ -2,6 +2,7 @@ import express, {Express} from 'express'
 import cors from 'cors'
 import { AddressInfo } from "net";
 import { userRouter } from "./controller/router/UserRouter";
+import { postRouter } from './controller/router/PostRouter';
 
 
 
@@ -11,6 +12,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/user", userRouter)
+app.use("/post", postRouter)
 
 
 
