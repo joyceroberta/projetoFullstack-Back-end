@@ -3,13 +3,13 @@ import { CustomError } from "../business/error/CustomError";
 import { BaseDatabase } from "./BaseDatabase";
 
 export class UserDatabase extends BaseDatabase {
-  private static TABLE_NAME = "photomet_users";
+  private static tableUsers = "photomet_users";
 
   public async createUser(user: User): Promise<void> {
     try {
       await BaseDatabase.connection
         .insert(user)
-        .into(UserDatabase.TABLE_NAME);
+        .into(UserDatabase.tableUsers);
     } catch (error) {
       throw new CustomError(500, "Deu ruim rapá");
     }
@@ -19,7 +19,7 @@ export class UserDatabase extends BaseDatabase {
     try {
       const result = await BaseDatabase.connection
         .select("*")
-        .from(UserDatabase.TABLE_NAME)
+        .from(UserDatabase.tableUsers)
         .where({ email });
       
 
