@@ -22,10 +22,10 @@ export interface Tag {
   name: string[];
 }
 
-// export interface PostIdInputDTO{
-//   token: string,
-//   id: string
-// }
+export interface PostIdInputDTO{
+  token: string,
+  id: string
+}
 
 
 export class PostFinal {

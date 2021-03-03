@@ -51,4 +51,19 @@ export class PostController{
                 .send({ error: error.message });
         }
     }
+
+    public getPostById = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const token: string = req.headers.authorization as string
+            const id = req.params.id
+
+            const result = await postBusiness.getPostById(id, token)
+            
+            res.status(200).send(result);
+        } catch (error) {
+
+             res.status(error.statusCode || 400).send({ error: error.message });
+            
+        }
+    }
 }

@@ -1,6 +1,6 @@
 import { Authenticator } from "./services/Authenticator";
 import { IdGenerator } from "./services/IdGenerator";
-import { Post, PostFinal, PostInputDTO, Tag, PostFeed } from "./entities/Post";
+import { Post, PostFinal, PostInputDTO, Tag, PostFeed, PostIdInputDTO } from "./entities/Post";
 import { CustomError } from "./error/CustomError";
 import { AuthenticationData } from "./entities/User";
 import dayjs from "dayjs";
@@ -72,16 +72,16 @@ export class PostBusiness {
           throw new CustomError(422, "Não permitido. Verifique suas credenciais.");
       }
 
-      const queryResult = await this.postDatabase.selectAll()
+      const postResult = await this.postDatabase.selectAll()
 
-      if(!queryResult){
+      if(!postResult){
         throw new CustomError(
           404,
           "Não encontrado."
         );
       }
 
-      const result = queryResult.map((item:PostFeed) => {
+      const result = postResult.map((item:PostFeed) => {
         return {
           id: item.id,
           subtitle: item.subtitle,
@@ -95,9 +95,42 @@ export class PostBusiness {
 
       return result
       
+      
     } catch (error) {
       throw new CustomError(error.statusCode, error.message);
     }
 
+  }
+
+  public getPostById = async(id: string, token: string): Promise<PostFinal> =>{
+    try {
+      if(!token || !id){
+          throw new CustomError(
+            422,
+            "Não permitido. Verifique suas credenciais."
+          );
+      }
+     
+      const tokenData: AuthenticationData = this.authenticator.getData(token)
+
+      if(!tokenData){
+           throw new CustomError(
+             422,
+             "Não permitido. Verifique suas credenciais."
+           );
+      }
+
+      const result = await this.postDatabase.selectById(id)
+
+      if(!result){
+           throw new CustomError(404, "Não encontrado.");
+      }
+
+      return result
+
+      
+    } catch (error) {
+      throw new CustomError(error.statusCode, error.message);
+    }
   }
 }

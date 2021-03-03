@@ -92,4 +92,36 @@ export class PostDatabase extends BaseDatabase {
        throw new Error(error.sqlmessage || error.message);
     }
   }
+
+  public async selectById(id: string): Promise<any>{
+    try {
+      const result = await BaseDatabase.connection.raw(`
+      SELECT post.id,
+             post.subtitle,
+             post.date,
+             post.file,
+             post.collection,
+             tag.name,
+             post.author_id, 
+             user.nickname,
+             user.profilePicture
+      FROM photomet_posts post
+      RIGHT JOIN photomet_users user
+      ON post.author_id = user.id
+      LEFT JOIN photomet_tags tag
+      ON tag.author_id = post.author_id
+      JOIN tags_posts pt
+      ON pt.tag_id = tag.id 
+      AND pt.post_id = post.id
+      WHERE post.id = "${id}"
+      ORDER BY date  DESC;
+      `);
+
+      return PostDatabase.toPostModel(result[0][0])
+
+    } catch (error) {
+      throw new Error(error.sqlmessage || error.message);
+    }
+
+  }
 }

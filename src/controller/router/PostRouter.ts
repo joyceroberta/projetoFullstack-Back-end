@@ -7,3 +7,4 @@ const postController = new PostController();
 
 postRouter.post("/create", postController.createPost)
 postRouter.get("/all", postController.getAllPosts)
+postRouter.get("/:id", postController.getPostById)
