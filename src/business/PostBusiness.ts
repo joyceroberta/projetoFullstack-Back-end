@@ -1,60 +1,136 @@
 import { Authenticator } from "./services/Authenticator";
-import { HashManager } from "./services/HashManager";
 import { IdGenerator } from "./services/IdGenerator";
-import { Post, PostInputDTO, Tag } from "./entities/Post"
+import { Post, PostFinal, PostInputDTO, Tag, PostFeed, PostIdInputDTO } from "./entities/Post";
 import { CustomError } from "./error/CustomError";
 import { AuthenticationData } from "./entities/User";
 import dayjs from "dayjs";
 import { PostDatabase } from "../data/PostDatabase";
 
-export class PostBusiness{
-    constructor(
-        private idGenerator: IdGenerator,
-        private authenticator: Authenticator,
-        private postDatabase: PostDatabase
-    ){}
+export class PostBusiness {
+  constructor(
+    private idGenerator: IdGenerator,
+    private authenticator: Authenticator,
+    private postDatabase: PostDatabase
+  ) {}
 
-    public createPost = async (input: PostInputDTO): Promise<void> => {
-        try {
-            if(!input.subtitle || !input.file || !input.tag || !input.collection || !input.token){
-                throw new CustomError(
-                  406,
-                  "Por favor preencha todos os campos."
-                );
-            }
+  public createPost = async (
+    input: PostInputDTO,
+    token: string
+  ): Promise<void> => {
+    try {
+      if (!input.subtitle || !input.file || !input.name || !input.collection) {
+        throw new CustomError(422, "Por favor preencha todos os campos.");
+      }
 
-            const tokenData: AuthenticationData = this.authenticator.getData(input.token)
+      const tokenData: AuthenticationData = this.authenticator.getData(token);
 
-            const idPost: string = this.idGenerator.generate();
-            const idTag: string = this.idGenerator.generate();
+      if (!tokenData) {
+        throw new CustomError(
+          422,
+          "Não permitido. Verifique suas credenciais."
+        );
+      }
 
-            
-            const date = dayjs().format("YYYY-MM-DD");
+      const idPost = this.idGenerator.generate();
+      const idTag  = this.idGenerator.generate();
 
-            const newTag: Tag = {
-                id: idTag,
-                authorId: tokenData.id,
-                name: input.tag
-            }
+      const date = dayjs().format("YYYY-MM-DD");
 
+      const newTag: Tag = {
+        id: idTag,
+        author_id: tokenData.id,
+        name: input.name,
+      };
 
-            const newPost: Post = new Post(
-                idPost,
-                input.subtitle,
-                date,
-                input.file,
-                input.collection,
-                tokenData.id
-            )
+      const newPost: Post = new Post(
+        idPost,
+        input.subtitle,
+        date,
+        input.file,
+        input.collection,
+        tokenData.id
+      );
 
-            await this.postDatabase.createPost(newPost, newTag)
-        
-
-            
-        } catch (error) {
-             throw new CustomError(error.statusCode, error.message); 
-            
-        }
-
+      await this.postDatabase.createPost(newPost, newTag);
+    } catch (error) {
+      throw new CustomError(error.statusCode, error.message);
     }
+  };
+
+  public getAllPosts = async(token: string): Promise<PostFinal[]> =>{
+    try {
+      if(!token){
+        throw new CustomError(
+          422,
+          "Não permitido. Verifique suas credenciais."
+        );
+      }
+      
+      const tokenData: AuthenticationData = this.authenticator.getData(token)
+
+      if(!tokenData) {
+          throw new CustomError(422, "Não permitido. Verifique suas credenciais.");
+      }
+
+      const postResult = await this.postDatabase.selectAll()
+
+      if(!postResult){
+        throw new CustomError(
+          404,
+          "Não encontrado."
+        );
+      }
+
+      const result = postResult.map((item:PostFeed) => {
+        return {
+          id: item.id,
+          subtitle: item.subtitle,
+          file: item.file,
+          name: item.name,
+          author_id: item.author_id,
+          nickname: item.nickname,
+          profilePicture: item.profilePicture
+        }
+      })
+
+      return result
+      
+      
+    } catch (error) {
+      throw new CustomError(error.statusCode, error.message);
+    }
+
+  }
+
+  public getPostById = async(id: string, token: string): Promise<PostFinal> =>{
+    try {
+      if(!token || !id){
+          throw new CustomError(
+            422,
+            "Não permitido. Verifique suas credenciais."
+          );
+      }
+     
+      const tokenData: AuthenticationData = this.authenticator.getData(token)
+
+      if(!tokenData){
+           throw new CustomError(
+             422,
+             "Não permitido. Verifique suas credenciais."
+           );
+      }
+
+      const result = await this.postDatabase.selectById(id)
+
+      if(!result){
+           throw new CustomError(404, "Não encontrado.");
+      }
+
+      return result
+
+      
+    } catch (error) {
+      throw new CustomError(error.statusCode, error.message);
+    }
+  }
 }

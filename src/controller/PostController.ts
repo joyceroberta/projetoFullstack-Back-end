@@ -16,15 +16,14 @@ export class PostController{
         try {
             const token: string = req.headers.authorization as string;
 
-            const input: PostInputDTO ={
-                token: token,
+            const postInput: PostInputDTO ={
                 subtitle: req.body.subtitle,
                 file: req.body.file,
-                tag: req.body.tag,
+                name: req.body.name,
                 collection: req.body.collection
             }
 
-            await postBusiness.createPost(input)
+            await postBusiness.createPost(postInput, token)
 
             res
                 .status(200)
@@ -32,6 +31,38 @@ export class PostController{
             
         } catch (error) {
             res.status(error.statusCode || 400).send({ error: error.message });
+            
+        }
+    }
+
+    public getAllPosts = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const token: string = req.headers.authorization as string;
+
+            const result = await postBusiness.getAllPosts(token)
+
+            res
+                .status(200)
+                .send(result)
+            
+        } catch (error) {
+             res
+                .status(error.statusCode || 400)
+                .send({ error: error.message });
+        }
+    }
+
+    public getPostById = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const token: string = req.headers.authorization as string
+            const id = req.params.id
+
+            const result = await postBusiness.getPostById(id, token)
+            
+            res.status(200).send(result);
+        } catch (error) {
+
+             res.status(error.statusCode || 400).send({ error: error.message });
             
         }
     }
